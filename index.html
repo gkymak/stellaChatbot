@@ -186,6 +186,7 @@
             display: flex;
             gap: 10px;
             position: relative;
+            align-items: center;
         }
 
         #prompt {
@@ -225,33 +226,37 @@
             cursor: pointer;
             font-weight: 600;
             border: none;
-            transition: all 0.3s;
+            background-color: var(--primary-color);
+            color: white;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             gap: 8px;
-        }
-
-        body.light #send-btn {
-            background-color: var(--primary-color);
-            color: white;
+            height: 48px;
         }
 
         body.dark #send-btn {
             background-color: var(--primary-light);
-            color: white;
         }
 
         #send-btn:hover {
+            background-color: var(--primary-dark);
             transform: translateY(-2px);
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
 
-        body.light #send-btn:hover {
-            background-color: var(--primary-dark);
-        }
-
         body.dark #send-btn:hover {
             background-color: var(--primary-color);
+        }
+
+        #send-btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        #send-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
         }
 
         .message {
@@ -259,7 +264,7 @@
             border-radius: 18px;
             max-width: 85%;
             position: relative;
-            line-height: 1.5;
+            line-height: 1.3;
             animation: messageIn 0.3s ease;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
@@ -295,11 +300,32 @@
             padding: 12px;
             border-radius: 8px;
             overflow-x: auto;
-            margin: 10px 0;
+            margin: 5px 0;
         }
 
         body.dark .bot pre {
             background-color: rgba(0, 0, 0, 0.2);
+        }
+
+        .message.bot ul {
+            margin-left: 20px;
+            list-style-type: disc;
+            line-height: 1.4;
+        }
+
+        .message.bot ol {
+            margin-left: 20px;
+            list-style-type: decimal;
+            line-height: 1.4;
+        }
+
+        .message.bot ul li,
+        .message.bot ol li {
+            margin-bottom: 4px;
+        }
+
+        .message.bot p {
+            margin-bottom: 6px;
         }
 
         .copy-btn {
@@ -590,9 +616,12 @@
 
         .functional-requirements {
             list-style-type: none;
+            margin-left: 0;
+            padding-left: 0;
         }
 
         .functional-requirements > li {
+            list-style-type: none;
             margin-bottom: 20px;
         }
 
@@ -607,15 +636,23 @@
             color: var(--primary-light);
         }
 
-        .details-content ul,
         .functional-requirements ul {
             margin-left: 40px;
             list-style-type: disc;
             line-height: 1.8;
         }
 
-        .details-content ul li,
-        .functional-requirements li {
+        .functional-requirements ul li {
+            margin-bottom: 8px;
+        }
+
+        .details-content ul:not(.functional-requirements) {
+            margin-left: 40px;
+            list-style-type: disc;
+            line-height: 1.8;
+        }
+
+        .details-content ul:not(.functional-requirements) li {
             margin-bottom: 8px;
         }
 
@@ -709,6 +746,7 @@
 
             #send-btn {
                 padding: 10px 20px;
+                height: 40px;
             }
         }
 
@@ -765,7 +803,7 @@
             <div id="chat-container"></div>
             <div id="input-area">
                 <input type="text" id="prompt" placeholder="Type your message here..." autocomplete="off">
-                <button id="send-btn" onclick="sendMessage()">
+                <button id="send-btn">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="margin-right: 5px;">
                         <path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576 6.636 10.07Zm6.787-8.201L1.591 6.602l4.339 2.76 7.494-7.493Z"/>
                     </svg>
@@ -942,6 +980,7 @@
             console.log('DOMContentLoaded event fired');
             const chatContainer = document.getElementById('chat-container');
             const promptInput = document.getElementById('prompt');
+            const sendBtn = document.getElementById('send-btn');
             const modeToggle = document.getElementById('mode-toggle');
             const modeLabel = document.getElementById('mode-label');
             let abortController = null;
@@ -951,13 +990,12 @@
             let loadingIndicator = null;
             let responseTextElement = null;
 
-            // Debugging logs
             console.log('chatContainer:', chatContainer);
             console.log('promptInput:', promptInput);
+            console.log('sendBtn:', sendBtn);
             console.log('modeToggle:', modeToggle);
             console.log('modeLabel:', modeLabel);
 
-            // Add welcome message with fallback
             if (chatContainer) {
                 console.log('chatContainer found, attempting to add welcome message');
                 try {
@@ -975,7 +1013,6 @@
                 console.error('chatContainer not found!');
             }
 
-            // Navigation link event listeners
             document.querySelectorAll('.nav-links a').forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -985,11 +1022,19 @@
                 });
             });
 
-            // Mode toggle event listener
             modeToggle.addEventListener('change', () => {
                 console.log('Mode toggle changed:', modeToggle.checked);
                 toggleMode();
             });
+
+            if (sendBtn) {
+                sendBtn.addEventListener('click', () => {
+                    console.log('Send button clicked');
+                    sendMessage();
+                });
+            } else {
+                console.error('Send button not found!');
+            }
 
             function setActiveNavLink(sectionId) {
                 document.querySelectorAll('.nav-links a').forEach(link => {
@@ -1022,38 +1067,110 @@
                 console.log('markdownToHtml called with:', text);
                 let html = '';
                 let inCodeBlock = false;
+                let inUnorderedList = false;
+                let inOrderedList = false;
                 let codeContent = '';
+                let orderedListItems = [];
                 const lines = text.split('\n');
                 
-                for (const line of lines) {
-                    if (line.trim().startsWith('```')) {
+                for (let i = 0; i < lines.length; i++) {
+                    let line = lines[i].trim();
+                    
+                    if (line.startsWith('```')) {
                         if (inCodeBlock) {
                             const codeId = `code-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
                             html += `<pre><code id="${codeId}">${codeContent.trim()}</code></pre><button class="copy-btn" data-code-id="${codeId}"><span>❐</span> Copy</button>`;
                             codeContent = '';
                             inCodeBlock = false;
                         } else {
+                            if (inOrderedList && orderedListItems.length > 0) {
+                                html += '<ol>' + orderedListItems.join('') + '</ol>';
+                                orderedListItems = [];
+                                inOrderedList = false;
+                            }
                             inCodeBlock = true;
                         }
                         continue;
                     }
                     
                     if (inCodeBlock) {
-                        codeContent += line + '\n';
+                        codeContent += lines[i] + '\n';
                         continue;
                     }
                     
-                    let formattedLine = line
-                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                        .replace(/`(.*?)`/g, '<code>$1</code>')
-                        .replace(/$$ (.*?) $$$$ (.*?) $$/g, '<a href="$2" target="_blank">$1</a>');
-                    
-                    html += formattedLine ? `<p>${formattedLine}</p>` : '<p> </p>';
+                    if (line.match(/^\d+\.\s/)) {
+                        if (!inOrderedList) {
+                            if (inUnorderedList) {
+                                html += '</ul>';
+                                inUnorderedList = false;
+                            }
+                            inOrderedList = true;
+                        }
+                        let listItem = line.replace(/^\d+\.\s/, '');
+                        listItem = listItem
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                            .replace(/`(.*?)`/g, '<code>$1</code>')
+                            .replace(/$$   (.*?)   $$$$   (.*?)   $$/g, '<a href="$2" target="_blank">$1</a>');
+                        orderedListItems.push(`<li>${listItem}`);
+                        let explanatoryText = '';
+                        for (let j = i + 1; j < lines.length && !lines[j].match(/^\d+\.\s/) && !lines[j].startsWith('* ') && !lines[j].startsWith('```'); j++) {
+                            if (lines[j].trim()) {
+                                explanatoryText += `<p>${lines[j].trim()}</p>`;
+                                i = j;
+                            } else {
+                                explanatoryText += '<p> </p>';
+                                i = j;
+                                break;
+                            }
+                        }
+                        orderedListItems[orderedListItems.length - 1] += explanatoryText + '</li>';
+                    }
+                    else if (line.startsWith('* ')) {
+                        if (inOrderedList && orderedListItems.length > 0) {
+                            html += '<ol>' + orderedListItems.join('') + '</ol>';
+                            orderedListItems = [];
+                            inOrderedList = false;
+                        }
+                        if (!inUnorderedList) {
+                            html += '<ul>';
+                            inUnorderedList = true;
+                        }
+                        let listItem = line.replace(/^\* /, '');
+                        listItem = listItem
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                            .replace(/`(.*?)`/g, '<code>$1</code>')
+                            .replace(/$$ (.*?) $$$$ (.*?) $$/g, '<a href="$2" target="_blank">$1</a>');
+                        html += `<li>${listItem}</li>`;
+                    }
+                    else {
+                        if (inOrderedList && orderedListItems.length > 0) {
+                            html += '<ol>' + orderedListItems.join('') + '</ol>';
+                            orderedListItems = [];
+                            inOrderedList = false;
+                        }
+                        if (inUnorderedList) {
+                            html += '</ul>';
+                            inUnorderedList = false;
+                        }
+                        let formattedLine = line
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                            .replace(/`(.*?)`/g, '<code>$1</code>')
+                            .replace(/$$ (.*?) $$$$ (.*?) $$/g, '<a href="$2" target="_blank">$1</a>');
+                        html += formattedLine ? `<p>${formattedLine}</p>` : '<p> </p>';
+                    }
                 }
                 
+                if (inOrderedList && orderedListItems.length > 0) {
+                    html += '<ol>' + orderedListItems.join('') + '</ol>';
+                }
+                if (inUnorderedList) html += '</ul>';
+                if (inCodeBlock) html += `<pre><code>${codeContent.trim()}</code></pre>`;
+                
                 console.log('markdownToHtml result:', html);
-                return html || '<p> </p>';
+                return html || '<p> </p>';
             }
 
             function addOrUpdateMessage(text, sender, isLoading = false) {
@@ -1123,15 +1240,20 @@
             }
 
             async function sendMessage() {
+                console.log('sendMessage function called');
                 if (isStreaming) {
                     if (abortController) {
+                        console.log('Aborting previous request');
                         abortController.abort();
                     }
                     return;
                 }
                 
                 const prompt = promptInput.value.trim();
-                if (!prompt) return;
+                if (!prompt) {
+                    console.log('No prompt entered, exiting sendMessage');
+                    return;
+                }
                 
                 addOrUpdateMessage(prompt, 'user');
                 promptInput.value = '';
@@ -1144,8 +1266,10 @@
                 
                 abortController = new AbortController();
                 isStreaming = true;
+                sendBtn.disabled = true;
                 
                 try {
+                    console.log('Sending request to Ollama API');
                     const response = await fetch('http://localhost:11434/api/generate', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -1173,6 +1297,7 @@
                         const { done, value } = await reader.read();
                         if (done) {
                             addOrUpdateMessage(botResponse, 'bot', false);
+                            console.log('Streaming complete');
                             break;
                         }
                         
@@ -1199,6 +1324,8 @@
                 } finally {
                     abortController = null;
                     isStreaming = false;
+                    sendBtn.disabled = false;
+                    console.log('Request completed, button re-enabled');
                 }
             }
 
@@ -1209,6 +1336,7 @@
             promptInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
+                    console.log('Enter key pressed');
                     sendMessage();
                 }
             });
